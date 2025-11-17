@@ -271,7 +271,8 @@ setInterval(() => {
   io.emit("heartbeat", { time: Date.now() });
 }, 20000);
 
-httpServer.listen(PORT, () => {
+// ✅ Código corregido
+httpServer.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Socket.IO escuchando en ${PORT}`);
   console.log(`🌐 API_BASE_URL=${API_BASE_URL}`);
 });
