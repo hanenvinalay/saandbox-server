@@ -1,29 +1,41 @@
 {
-  "name": "saandbox-server",
+  "name": "nodejs-socket-server",
   "version": "1.0.0",
-  "description": "",
+  "description": "Socket.IO server for real-time chat",
   "main": "dist/server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon src/server.ts",
+    "dev": "tsx watch src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js"
   },
-  "keywords": [],
-  "author": "Hansolo",
-  "license": "ISC",
-  "packageManager": "pnpm@10.22.0",
-  "devDependencies": {
-    "@types/node": "^20.19.25",
-    "nodemon": "^3.1.11",
-    "tsx": "^4.20.6",
-    "typescript": "^5.9.3"
-  },
+  "keywords": [
+    "socket.io",
+    "chat",
+    "websocket"
+  ],
+  "author": "",
+  "license": "MIT",
   "dependencies": {
     "axios": "^1.13.2",
     "dotenv": "^17.2.3",
     "socket.io": "^4.8.1",
-    "ts-node": "^10.9.2",
-    "uuid": "^13.0.0"
+    "http": "0.0.1-security",
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
+    "class-variance-authority": "0.7.1",
+    "clsx": "2.1.1",
+    "lucide-react": "0.545.0",
+    "tailwind-merge": "3.3.1",
+    "tailwindcss-animate": "1.0.7"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "tsx": "^4.19.2",
+    "uuid": "^13.0.0",
+    "typescript": "^5.7.2",
+    "@types/react": "19.2.2",
+    "@types/react-dom": "19.2.2",
+    "tailwindcss": "4.1.14",
+    "postcss": "8.5.6"
   }
 }
