@@ -5,10 +5,6 @@ import { v4 as uuidv4 } from "uuid";
 import dotenv from "dotenv";
 import fs from "fs";
 import path from "path";
-import { fileURLToPath } from "url";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 dotenv.config();
 
@@ -71,7 +67,8 @@ interface StopTypingPayload {
   user_id: string;
 }
 
-/* ======= Config ======= */
+const __dirname = path.resolve();
+
 
 const PORT = Number(process.env.PORT || 3000);
 
@@ -100,7 +97,10 @@ const httpServer = http.createServer((req, res) => {
 
   // Get current config
   if (req.method === "GET" && req.url === "/api/config") {
-    res.writeHead(200, { "Content-Type": "application/json" });
+    res.writeHead(200, { 
+      "Content-Type": "application/json",
+      "Access-Control-Allow-Origin": "*"
+    });
     res.end(JSON.stringify(dynamicConfig));
     return;
   }
@@ -119,13 +119,27 @@ const httpServer = http.createServer((req, res) => {
         
         console.log("✅ Configuración actualizada:", dynamicConfig);
         
-        res.writeHead(200, { "Content-Type": "application/json" });
+        res.writeHead(200, { 
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*"
+        });
         res.end(JSON.stringify({ success: true, config: dynamicConfig }));
       } catch (err) {
         res.writeHead(400, { "Content-Type": "application/json" });
         res.end(JSON.stringify({ success: false, error: "Invalid JSON" }));
       }
     });
+    return;
+  }
+
+  // CORS preflight
+  if (req.method === "OPTIONS") {
+    res.writeHead(200, {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type"
+    });
+    res.end();
     return;
   }
 
@@ -295,6 +309,7 @@ io.on("connection", (socket: Socket) => {
     socket.join(String(resolvedRoomId));
     socket.emit("joined_room", { room_id: resolvedRoomId });
   });
+  
   socket.on("checkout_initiated", (payload: CheckoutInitiatedPayload) => {
     try {
       createAction(payload);
