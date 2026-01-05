@@ -35,24 +35,13 @@ export interface SocketEvent {
 /* CLIENT → SERVER EVENTS           */
 /* ──────────────────────────────── */
 export interface ClientToServerEventsV1 {
-  "room:join": { roomId: number }
-  "room:event": SocketEvent
+  "room:join": (payload: { roomId: number }) => void
+  "room:event": (event: SocketEvent) => void
 }
 
 /* ──────────────────────────────── */
 /* SERVER → CLIENT EVENTS           */
 /* ──────────────────────────────── */
 export interface ServerToClientEventsV1 {
-  "room:event": SocketEvent
-}
-export interface ClientToServerEventsV1 {
-  'room:join': { roomId: number }
-  'room:event': SocketEvent
-}
-
-/* ──────────────────────────────── */
-/* SERVER → CLIENT EVENTS           */
-/* ──────────────────────────────── */
-export interface ServerToClientEventsV1 {
-  'room:event': SocketEvent
+  "room:event": (event: SocketEvent) => void
 }
