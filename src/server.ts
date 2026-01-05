@@ -7,7 +7,7 @@ import {
   ClientToServerEventsV1,
   ServerToClientEventsV1,
   SocketEvent
-} from './events.v1'
+} from './events-v1'
 
 dotenv.config()
 
@@ -64,3 +64,4 @@ io.on('connection', socket => {
 httpServer.listen(PORT, () => {
   console.log(`🚀 Socket server en puerto ${PORT}`)
 })
+
