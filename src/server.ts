@@ -1,88 +1,66 @@
 import { createServer } from 'http'
-import { Server, Socket } from 'socket.io'
+import { Server } from 'socket.io'
 import axios from 'axios'
 import dotenv from 'dotenv'
+
+import {
+  ClientToServerEventsV1,
+  ServerToClientEventsV1,
+  SocketEvent
+} from './events.v1'
 
 dotenv.config()
 
 const PORT = Number(process.env.PORT || 3004)
 const API_BASE_URL = process.env.API_BASE_URL!
-const API_KEY = process.env.API_KEY
 
 const httpServer = createServer((_req, res) => {
   res.writeHead(200)
   res.end('OK')
 })
 
-const io = new Server(httpServer, {
+const io = new Server<
+  ClientToServerEventsV1,
+  ServerToClientEventsV1
+>(httpServer, {
   cors: { origin: '*' }
 })
 
-interface SocketEvent<T = unknown> {
-  event: string
-  roomId: number
-  data: T
+async function saveMessage (event: SocketEvent) {
+  if (event.data.kind !== 'message') return
+
+  await axios.post(
+    `${API_BASE_URL}/room/messages/${event.roomId}`,
+    {
+      content: event.data.payload.content,
+      sender: event.sender,
+      timestamp: event.data.payload.timestamp
+    },
+    { headers: { 'Content-Type': 'application/json' } }
+  )
 }
 
-function saveMessage(roomId: number, data: any) {
-  console.log(`Iniciando guardado de mensaje para la sala ${roomId}`)
-  axios
-    .post(`${API_BASE_URL}/room/messages/${roomId}`, data, {
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    })
-    .then(() => {
-      console.log(`Mensaje guardado exitosamente para la sala ${roomId}`)
-    })
-    .catch(error => {
-      console.error(
-        `Error al guardar el mensaje para la sala ${roomId}:`,
-        error
-      )
-    })
-}
+io.on('connection', socket => {
+  console.log('🔌 conectado:', socket.id)
 
-io.on('connection', (socket: Socket) => {
-  socket.on('event', <T>(payload: SocketEvent<T>) => {
-    const { event, roomId, data } = payload
-
-    socket.to(`room:${roomId}`).emit(event, data)
-
-    // Persistencia solo si es mensaje
-    if (event === 'room:message') {
-      saveMessage(roomId, data)
-    }
-  })
-
-  socket.on('room:join', ({ roomId }: { roomId: number }) => {
+  socket.on('room:join', ({ roomId }) => {
     socket.join(`room:${roomId}`)
+    console.log(`📥 joined room:${roomId}`)
+  })
+
+  socket.on('room:event', async event => {
+    // reenviar a la room
+    socket.to(`room:${event.roomId}`).emit('room:event', event)
+
+    // persistir solo mensajes
+    await saveMessage(event)
+  })
+
+  socket.on('disconnect', () => {
+    console.log('❌ desconectado:', socket.id)
   })
 })
 
-setInterval(() => {
-  io.emit('heartbeat', { time: Date.now() })
-  console.log('💓 Heartbeat emitido:', new Date().toISOString())
-}, 40000)
-
-async function startServer() {
-  httpServer.listen(PORT, () => {
-    console.log(`🚀 Socket.IO server corriendo en puerto ${PORT}`)
-    console.log(`📡 WebSocket endpoint: ws://localhost:${PORT}`)
-    console.log(`🏥 Health check: http://localhost:${PORT}/health`)
-    console.log(`🌍 Entorno: ${process.env.NODE_ENV || 'development'}`)
-    console.log(`🔗 API Base URL: ${API_BASE_URL}`)
-  })
-}
-
-startServer()
-
-process.on('uncaughtException', error => {
-  console.error('Uncaught Exception:', error)
-  process.exit(1)
-})
-
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('Unhandled Rejection at:', promise, 'reason:', reason)
-  process.exit(1)
+httpServer.listen(PORT, () => {
+  console.log(`🚀 Socket server en puerto ${PORT}`)
 })
