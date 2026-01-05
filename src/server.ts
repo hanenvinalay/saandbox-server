@@ -3,7 +3,7 @@ import { Server } from 'socket.io'
 import axios from 'axios'
 import dotenv from 'dotenv'
 
-import {
+import type {
   ClientToServerEventsV1,
   ServerToClientEventsV1,
   SocketEvent
@@ -14,10 +14,23 @@ dotenv.config()
 const PORT = Number(process.env.PORT || 3004)
 const API_BASE_URL = process.env.API_BASE_URL!
 
-const httpServer = createServer((_req, res) => {
+const httpServer = createServer((req, res) => {
+  if (req.url === '/health') {
+    res.writeHead(200, { 'Content-Type': 'application/json' })
+    res.end(
+      JSON.stringify({
+        status: 'ok',
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime()
+      })
+    )
+    return
+  }
+
   res.writeHead(200)
   res.end('OK')
 })
+
 
 const io = new Server<
   ClientToServerEventsV1,
@@ -26,6 +39,9 @@ const io = new Server<
   cors: { origin: '*' }
 })
 
+/* ──────────────────────────────── */
+/* Persistencia                     */
+/* ──────────────────────────────── */
 async function saveMessage (event: SocketEvent) {
   if (event.data.kind !== 'message') return
 
@@ -40,21 +56,30 @@ async function saveMessage (event: SocketEvent) {
   )
 }
 
+/* ──────────────────────────────── */
+/* Socket lifecycle                 */
+/* ──────────────────────────────── */
 io.on('connection', socket => {
   console.log('🔌 conectado:', socket.id)
 
-  socket.on('room:join', ({ roomId }) => {
-    socket.join(`room:${roomId}`)
-    console.log(`📥 joined room:${roomId}`)
-  })
+  socket.on(
+    'room:join',
+    (payload: ClientToServerEventsV1['room:join']) => {
+      const { roomId } = payload
+      socket.join(`room:${roomId}`)
+    }
+  )
 
-  socket.on('room:event', async event => {
-    // reenviar a la room
-    socket.to(`room:${event.roomId}`).emit('room:event', event)
+  socket.on(
+    'room:event',
+    async (event: SocketEvent) => {
+      socket
+        .to(`room:${event.roomId}`)
+        .emit('room:event', event)
 
-    // persistir solo mensajes
-    await saveMessage(event)
-  })
+      await saveMessage(event)
+    }
+  )
 
   socket.on('disconnect', () => {
     console.log('❌ desconectado:', socket.id)
@@ -62,6 +87,5 @@ io.on('connection', socket => {
 })
 
 httpServer.listen(PORT, () => {
-  console.log(`🚀 Socket server en puerto ${PORT}`)
+  console.log(`🚀 Socket server corriendo en ${PORT}`)
 })
-
