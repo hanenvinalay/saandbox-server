@@ -1,7 +1,7 @@
 /* ──────────────────────────────── */
 /* COMMON                           */
 /* ──────────────────────────────── */
-export type Sender = 'user' | 'agent'
+export type Sender = "user" | "agent"
 
 /* ──────────────────────────────── */
 /* PAYLOADS                         */
@@ -12,15 +12,15 @@ export interface ChatMessagePayload {
 }
 
 export interface TypingNotificationPayload {
-  type: 'start' | 'stop'
+  type: "start" | "stop"
 }
 
 /* ──────────────────────────────── */
 /* ROOM EVENT DATA                  */
 /* ──────────────────────────────── */
 export type RoomEventData =
-  | { kind: 'message'; payload: ChatMessagePayload }
-  | { kind: 'typing'; payload: TypingNotificationPayload }
+  | { kind: "message"; payload: ChatMessagePayload }
+  | { kind: "typing"; payload: TypingNotificationPayload }
 
 /* ──────────────────────────────── */
 /* ENVELOPE                         */
@@ -34,6 +34,17 @@ export interface SocketEvent {
 /* ──────────────────────────────── */
 /* CLIENT → SERVER EVENTS           */
 /* ──────────────────────────────── */
+export interface ClientToServerEventsV1 {
+  "room:join": { roomId: number }
+  "room:event": SocketEvent
+}
+
+/* ──────────────────────────────── */
+/* SERVER → CLIENT EVENTS           */
+/* ──────────────────────────────── */
+export interface ServerToClientEventsV1 {
+  "room:event": SocketEvent
+}
 export interface ClientToServerEventsV1 {
   'room:join': { roomId: number }
   'room:event': SocketEvent
