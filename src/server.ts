@@ -63,13 +63,13 @@ async function saveMessage(event: SocketEvent): Promise<void> {
 io.on("connection", (socket) => {
   console.log("🔌 Cliente conectado:", socket.id)
 
-  socket.on("room:join", (payload) => {
+  socket.on("room:join", (payload: { roomId: number }) => {
     const { roomId } = payload
     socket.join(`room:${roomId}`)
     console.log(`📥 Cliente ${socket.id} se unió a room:${roomId}`)
   })
 
-  socket.on("room:event", async (event) => {
+  socket.on("room:event", async (event: SocketEvent) => {
     // Emitir a todos en la room excepto el emisor
     socket.to(`room:${event.roomId}`).emit("room:event", event)
 
